@@ -1,3 +1,5 @@
+mod app;
+
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {
     let native_options = eframe::NativeOptions {
@@ -10,7 +12,7 @@ fn main() -> eframe::Result {
     eframe::run_native(
         "My CV",
         native_options,
-        Box::new(|cc| Ok(Box::new(App::new(cc)))),
+        Box::new(|cc| Ok(Box::new(app::App::new(cc)))),
     )
 }
 
@@ -40,7 +42,7 @@ fn main() {
             .start(
                 canvas,
                 web_options,
-                Box::new(|cc| Ok(Box::new(App::new(cc)))),
+                Box::new(|cc| Ok(Box::new(app::App::new(cc)))),
             )
             .await;
 
@@ -59,26 +61,4 @@ fn main() {
             }
         }
     });
-}
-
-#[derive(Default)]
-struct App {}
-
-impl App {
-    fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        cc.egui_ctx.set_visuals(egui::Visuals {
-            dark_mode: true,
-            panel_fill: egui::Color32::LIGHT_GRAY,
-            ..Default::default()
-        });
-        Self::default()
-    }
-}
-
-impl eframe::App for App {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("My CV");
-        });
-    }
 }
