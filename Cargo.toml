@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 eframe = "0.31.1"
 egui = "0.31.1"
+egui_extras = { version = "0.31.1", features = ["default", "all_loaders"] }
+image = { version = "0.25", features = ["jpeg", "png"] }
 
 # web:
 [target.'cfg(target_arch = "wasm32")'.dependencies]
