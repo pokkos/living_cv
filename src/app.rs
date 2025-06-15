@@ -1,5 +1,5 @@
 use crate::pulse::Circle;
-use egui::{CentralPanel, Label, Rect, include_image};
+use egui::{CentralPanel, Color32, Context, Label, Rect, Visuals, include_image};
 
 #[derive(Default)]
 pub struct App {
@@ -19,12 +19,27 @@ impl App {
 }
 
 impl eframe::App for App {
-    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+    fn clear_color(&self, _: &Visuals) -> [f32; 4] {
         [0.0, 0.0, 0.0, 0.0]
     }
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+
+    fn update(&mut self, ctx: &Context, _: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             ui.image(include_image!("../assets/sample_cv.svg"));
+
+            if cfg!(debug_assertions) {
+                let rect = Rect::from_min_max((120., 265.).into(), (865., 455.).into());
+                ui.painter().debug_rect(rect, Color32::RED, "");
+                ui.put(
+                    Rect::from_min_max((0., 0.).into(), (100., 50.).into()),
+                    Label::new(
+                        ui.ctx()
+                            .pointer_latest_pos()
+                            .unwrap_or(egui::Pos2 { x: -1., y: -1. })
+                            .to_string(),
+                    ),
+                );
+            }
 
             if ui.add(&mut self.circles).contains_pointer() {
                 self.circles.start_animation();

@@ -41,13 +41,13 @@ impl Circle {
 
 impl Widget for &mut Circle {
     fn ui(self, ui: &mut Ui) -> Response {
-        let position = Pos2::new(200., 200.);
-        let rect_field = Rect::from_pos(position).expand(MAX_RADIUS);
+        let position = Pos2::new(865. - 2. * MAX_RADIUS, 360.);
+        let rect_hover_field = Rect::from_min_max((120., 265.).into(), (865., 455.).into());
         let stroke = Stroke::new(3., Color32::MAGENTA);
 
-        let resp = ui.allocate_rect(rect_field, Sense::click());
+        let resp = ui.allocate_rect(rect_hover_field, Sense::click());
 
-        if self.radius == MAX_RADIUS || self.is_animated == false {
+        if self.radius == MAX_RADIUS || !self.is_animated {
             self.radius = MIN_RADIUS;
 
             ui.ctx().clear_animations();
@@ -62,7 +62,7 @@ impl Widget for &mut Circle {
             ui.ctx().request_repaint();
         }
 
-        if ui.is_rect_visible(rect_field) {
+        if ui.is_rect_visible(rect_hover_field) {
             let painter = ui.painter();
 
             painter.add(CircleShape {
