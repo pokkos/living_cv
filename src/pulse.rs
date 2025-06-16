@@ -9,6 +9,7 @@ pub struct Circle {
     id: Id,
     radius: f32,
     is_animated: bool,
+    was_animated: bool,
     hover_rect: Rect,
 }
 
@@ -19,6 +20,7 @@ impl Circle {
             hover_rect: rect,
             radius: MIN_RADIUS,
             is_animated: true,
+            was_animated: true,
         }
     }
 
@@ -50,6 +52,14 @@ impl Widget for &mut Circle {
         // allocate the hover rectangle that enables the animation and interaction
         let resp = ui.allocate_rect(self.hover_rect, Sense::click());
 
+        // fix the animation flickering by setting the previous radius when the state changes
+        if !self.is_animated && self.was_animated {
+            ui.ctx().clear_animations();
+            self.radius = ui.ctx().animate_value_with_time(self.id, self.radius, 0.);
+            ui.ctx().request_repaint();
+            self.was_animated = false;
+        }
+
         // if the animation is stopped or the maximum radius is reached, reset the radius to the min value
         if self.radius == MAX_RADIUS || !self.is_animated {
             self.radius = ui.ctx().animate_value_with_time(self.id, MIN_RADIUS, 0.);
@@ -62,6 +72,7 @@ impl Widget for &mut Circle {
                 .ctx()
                 .animate_value_with_time(self.id, MAX_RADIUS, ANIMATION_TIME);
             ui.ctx().request_repaint();
+            self.was_animated = true;
         }
 
         // actually draw the circle if it's in view
