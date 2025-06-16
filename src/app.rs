@@ -1,9 +1,8 @@
 use crate::pulse::Circle;
 use egui::{CentralPanel, Color32, Context, Label, Rect, Visuals, include_image};
 
-#[derive(Default)]
 pub struct App {
-    circles: Circle,
+    circles: Vec<Circle>,
 }
 
 impl App {
@@ -14,7 +13,19 @@ impl App {
             ..Default::default()
         });
 
-        Self::default()
+        // temporarily hard-coded coordinates
+        let circles = vec![
+            Circle::new(
+                Rect::from_min_max((120., 265.).into(), (865., 455.).into()),
+                "pulse_1".into(),
+            ),
+            Circle::new(
+                Rect::from_min_max((120., 500.).into(), (865., 690.).into()),
+                "pulse_2".into(),
+            ),
+        ];
+
+        Self { circles }
     }
 }
 
@@ -25,11 +36,14 @@ impl eframe::App for App {
 
     fn update(&mut self, ctx: &Context, _: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
+            // draw the background image (cv)
             ui.image(include_image!("../assets/sample_cv.svg"));
 
+            // debug helpers
             if cfg!(debug_assertions) {
-                let rect = Rect::from_min_max((120., 265.).into(), (865., 455.).into());
-                ui.painter().debug_rect(rect, Color32::RED, "");
+                for rect in self.circles.iter() {
+                    ui.painter().debug_rect(rect.get_rect(), Color32::RED, "");
+                }
                 ui.put(
                     Rect::from_min_max((0., 0.).into(), (100., 50.).into()),
                     Label::new(
@@ -41,11 +55,14 @@ impl eframe::App for App {
                 );
             }
 
-            if ui.add(&mut self.circles).contains_pointer() {
-                self.circles.start_animation();
-            } else {
-                self.circles.stop_animation();
-            };
+            // check for hovering areas and start the relevant animation
+            for pulse in self.circles.iter_mut() {
+                if ui.add(&mut *pulse).contains_pointer() {
+                    pulse.start_animation();
+                } else {
+                    pulse.stop_animation();
+                };
+            }
         });
     }
 }
