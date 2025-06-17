@@ -1,5 +1,4 @@
-use egui::epaint::CircleShape;
-use egui::{Color32, Id, Rect, Response, Sense, Stroke, Ui, Widget};
+use egui::{Color32, Id, Pos2, Rect, Response, Sense, Stroke, Ui, Widget, epaint::CircleShape};
 
 const MIN_RADIUS: f32 = 1.;
 const MAX_RADIUS: f32 = 10.;
@@ -11,6 +10,8 @@ pub struct Circle {
     is_animated: bool,
     was_animated: bool,
     hover_rect: Rect,
+    is_popup_visible: bool,
+    position: Pos2,
 }
 
 impl Circle {
@@ -21,6 +22,8 @@ impl Circle {
             radius: MIN_RADIUS,
             is_animated: true,
             was_animated: true,
+            is_popup_visible: false,
+            position: Pos2 { x: 0., y: 0. },
         }
     }
 
@@ -39,13 +42,29 @@ impl Circle {
     pub fn get_rect(&self) -> Rect {
         self.hover_rect
     }
+
+    pub fn get_position(&self) -> Pos2 {
+        self.position
+    }
+
+    pub fn show_popup(&mut self) {
+        self.is_popup_visible = true;
+    }
+
+    pub fn hide_popup(&mut self) {
+        self.is_popup_visible = false;
+    }
+
+    pub fn is_popup_visible(&self) -> bool {
+        self.is_popup_visible
+    }
 }
 
 impl Widget for &mut Circle {
     fn ui(self, ui: &mut Ui) -> Response {
         // set the position for the pulsating circle
-        let mut position = self.hover_rect.right_center();
-        position.x -= 2. * MAX_RADIUS;
+        self.position = self.hover_rect.right_center();
+        self.position.x -= 2. * MAX_RADIUS;
 
         let stroke = Stroke::new(3., Color32::MAGENTA);
 
@@ -82,7 +101,7 @@ impl Widget for &mut Circle {
         // actually draw the circle if it's in view
         if ui.is_rect_visible(self.hover_rect) {
             ui.painter().add(CircleShape {
-                center: position,
+                center: self.position,
                 radius: self.radius,
                 fill: Color32::TRANSPARENT,
                 stroke,
