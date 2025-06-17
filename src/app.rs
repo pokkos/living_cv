@@ -1,5 +1,5 @@
 use crate::pulse::Circle;
-use egui::{CentralPanel, Color32, Context, Label, Rect, Visuals, include_image};
+use egui::{CentralPanel, Context, Label, Rect, Visuals, include_image};
 
 pub struct App {
     circles: Vec<Circle>,
@@ -37,13 +37,10 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &Context, _: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
             // draw the background image (cv)
-            ui.image(include_image!("../assets/sample_cv.svg"));
+            let img_resp = ui.image(include_image!("../assets/sample_cv.svg"));
 
             // debug helpers
             if cfg!(debug_assertions) {
-                for rect in self.circles.iter() {
-                    ui.painter().debug_rect(rect.get_rect(), Color32::RED, "");
-                }
                 ui.put(
                     Rect::from_min_max((0., 0.).into(), (100., 50.).into()),
                     Label::new(
@@ -52,6 +49,10 @@ impl eframe::App for App {
                             .unwrap_or(egui::Pos2 { x: -1., y: -1. })
                             .to_string(),
                     ),
+                );
+                ui.put(
+                    Rect::from_min_max((0., 50.).into(), (200., 100.).into()),
+                    Label::new(img_resp.rect.to_string()),
                 );
             }
 
