@@ -1,6 +1,7 @@
 use crate::pulse::Circle;
 use egui::{
-    CentralPanel, Color32, Context, Label, Pos2, Rect, Vec2, Visuals, Window, include_image,
+    CentralPanel, Color32, Context, Frame, Id, Label, Modal, Pos2, Rect, Vec2, Visuals,
+    include_image,
 };
 
 pub struct App {
@@ -9,7 +10,7 @@ pub struct App {
 
 impl App {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        cc.egui_ctx.set_visuals(egui::Visuals {
+        cc.egui_ctx.set_visuals(Visuals {
             dark_mode: false,
             panel_fill: Color32::TRANSPARENT,
             ..Default::default()
@@ -79,14 +80,14 @@ impl eframe::App for App {
                 }
 
                 if pulse.is_popup_visible() {
-                    let mut is_open = true;
-                    let win = Window::new("Info")
-                        .fixed_pos(pulse.get_position())
-                        .fixed_size(Vec2::new(300., 300.))
-                        .resizable(false)
-                        .collapsible(false)
-                        .open(&mut is_open);
-                    win.show(ui.ctx(), |ui| ui.allocate_space(ui.available_size()));
+                    Modal::new(Id::new("modal"))
+                        .backdrop_color(Color32::from_hex("#aaddee55").unwrap())
+                        .show(ui.ctx(), |ui| {
+                            ui.visuals_mut().faint_bg_color = Color32::RED;
+                            Frame::canvas(ui.style())
+                                .fill(Color32::from_hex("#ccdde9").unwrap())
+                                .show(ui, |ui| ui.allocate_space(Vec2 { x: 400., y: 300. }));
+                        });
                 }
             }
         });
