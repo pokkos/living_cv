@@ -1,6 +1,6 @@
 use crate::pulse::Circle;
 use egui::{
-    CentralPanel, Color32, Context, Frame, Id, Label, Modal, Pos2, Rect, Vec2, Visuals,
+    CentralPanel, Color32, Context, Frame, Id, Label, Modal, Pos2, Rect, Ui, Vec2, Visuals,
     include_image,
 };
 
@@ -44,19 +44,7 @@ impl eframe::App for App {
 
             // debug helpers
             if cfg!(debug_assertions) {
-                ui.put(
-                    Rect::from_min_max((0., 0.).into(), (100., 50.).into()),
-                    Label::new(
-                        ui.ctx()
-                            .pointer_latest_pos()
-                            .unwrap_or(Pos2 { x: -1., y: -1. })
-                            .to_string(),
-                    ),
-                );
-                ui.put(
-                    Rect::from_min_max((0., 50.).into(), (200., 100.).into()),
-                    Label::new(img_resp.rect.to_string()),
-                );
+                debug_output(ui, &img_resp.rect);
             }
 
             // check for hovering areas and start the relevant animation
@@ -92,4 +80,20 @@ impl eframe::App for App {
             }
         });
     }
+}
+
+fn debug_output(ui: &mut Ui, rect: &Rect) {
+    ui.put(
+        Rect::from_min_max((0., 0.).into(), (100., 50.).into()),
+        Label::new(
+            ui.ctx()
+                .pointer_latest_pos()
+                .unwrap_or(Pos2 { x: -1., y: -1. })
+                .to_string(),
+        ),
+    );
+    ui.put(
+        Rect::from_min_max((0., 50.).into(), (200., 100.).into()),
+        Label::new(rect.to_string()),
+    );
 }
