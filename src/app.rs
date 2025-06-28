@@ -87,7 +87,7 @@ impl eframe::App for App {
                     final_rect.set_height(block.height);
 
                     let new_id = format!("area_{}", self.areas.len());
-                    let new_area = Circle::new(final_rect, new_id.into());
+                    let new_area = Circle::new(final_rect, new_id);
                     self.areas.push(new_area);
                 }
 

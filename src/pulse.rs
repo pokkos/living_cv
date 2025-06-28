@@ -17,9 +17,9 @@ pub struct Circle {
 }
 
 impl Circle {
-    pub fn new(rect: Rect, id: Id) -> Self {
+    pub fn new(rect: Rect, id: String) -> Self {
         Self {
-            id,
+            id: Id::from(id),
             hover_rect: rect,
             radius: MIN_RADIUS,
             is_animated: true,
