@@ -7,6 +7,9 @@ use egui::{
 pub struct App {
     areas: Vec<Circle>,
     texture: egui::TextureHandle,
+    canvas_size: Vec2,
+    document: DocumentPage,
+    recompile_needed: bool,
 }
 
 impl App {
@@ -24,6 +27,10 @@ impl App {
                 egui::ColorImage::example(),
                 egui::TextureOptions::NEAREST,
             ),
+            canvas_size: Vec2::default(),
+            document: get_document(cc.egui_ctx.screen_rect().size())
+                .expect("Error with the typst document"),
+            recompile_needed: true,
         }
     }
 }
@@ -61,6 +68,13 @@ impl eframe::App for App {
     }
 
     fn update(&mut self, ctx: &Context, _: &mut eframe::Frame) {
+        // store the canvas size and retrigger the document compilation and area detection if it changed
+        let size = ctx.screen_rect().size();
+        if size != self.canvas_size {
+            self.recompile_needed = true;
+            self.canvas_size = size;
+        }
+
         CentralPanel::default()
             .frame(egui::Frame::default().inner_margin(0.0).outer_margin(0.0))
             .show(ctx, |ui| {
@@ -73,23 +87,33 @@ impl eframe::App for App {
                     }
                 });
 
-                // get the document
-                let document =
-                    get_document(ui.available_size()).expect("Error with typst document");
+                // only recompile and analyze the document on start and when the screen area changed
+                if self.recompile_needed {
+                    // get the document
+                    self.document = get_document(size).expect("Error with typst document");
+
+                    // clear the stored data blocks
+                    self.areas.clear();
+
+                    // analyze the document
+                    let blocks = self.document.get_data_blocks();
+                    for block in blocks.iter() {
+                        let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
+                        final_rect.set_width(self.document.image.width as f32);
+                        final_rect.set_height(block.height);
+
+                        let new_id = format!("area_{}", self.areas.len());
+                        let new_area = Circle::new(final_rect, new_id);
+                        self.areas.push(new_area);
+                    }
+
+                    // reset the flag
+                    self.recompile_needed = false;
+                    println!("Recompiled");
+                }
 
                 // draw the document as a texture in the background
-                render_background(ui, &document, &mut self.texture);
-
-                let blocks = document.get_data_blocks();
-                for block in blocks.iter() {
-                    let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
-                    final_rect.set_width(document.image.width as f32);
-                    final_rect.set_height(block.height);
-
-                    let new_id = format!("area_{}", self.areas.len());
-                    let new_area = Circle::new(final_rect, new_id);
-                    self.areas.push(new_area);
-                }
+                render_background(ui, &self.document, &mut self.texture);
 
                 // debug helpers
                 // if cfg!(debug_assertions) {
