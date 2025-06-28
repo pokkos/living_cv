@@ -73,10 +73,6 @@ impl Widget for &mut Circle {
         // allocate the hover rectangle that enables the animation and interaction
         let resp = ui.allocate_rect(self.hover_rect, Sense::click());
 
-        // if cfg!(debug_assertions) {
-        //     resp.paint_debug_info();
-        // }
-
         // fix the animation flickering by setting the previous radius when the state changes
         if !self.is_animated && self.was_animated {
             ui.ctx().clear_animations();

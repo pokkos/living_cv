@@ -27,7 +27,7 @@ pub struct TypstWorld {
 
 pub struct DocumentPage {
     pub width: f32,
-    pub height: f32,
+    pub _height: f32,
     pub page: Page,
     pub image: Image,
     pub ratio_page_to_panel: f32,
@@ -42,7 +42,7 @@ pub struct Image {
 pub struct DataBlock {
     pub x: f32,
     pub y: f32,
-    pub width: f32,
+    pub _width: f32,
     pub height: f32,
 }
 
@@ -83,7 +83,7 @@ impl DocumentPage {
 
         Ok(Self {
             width,
-            height,
+            _height: height,
             page,
             image,
             ratio_page_to_panel,
@@ -102,7 +102,7 @@ impl DocumentPage {
                 let block = DataBlock {
                     x: self.ratio_page_to_panel * pos.x.to_pt() as f32,
                     y: self.ratio_page_to_panel * pos.y.to_pt() as f32,
-                    width: self.width,
+                    _width: self.width,
                     height: group.frame.height().to_pt() as f32 * self.ratio_page_to_panel,
                 };
                 blocks.push(block);
