@@ -3,7 +3,6 @@ use egui::{
     CentralPanel, Color32, ColorImage, Context, Frame, Id, Label, Modal, Pos2, Rect, Shape, Ui,
     Vec2, Visuals,
 };
-use typst::layout::FrameItem;
 
 pub struct App {
     circles: Vec<Circle>,
@@ -41,30 +40,31 @@ impl App {
     }
 }
 
-fn get_document(ui: &Ui) -> Result<DocumentPage, String> {
+fn get_document(available_size: Vec2) -> Result<DocumentPage, String> {
     let content = std::include_str!("../assets/cv.typ");
+    let document = DocumentPage::new(content, available_size)?;
 
-    let document = DocumentPage::new(content, ui.available_size())?;
-
-    let ratio = document.ratio_page_to_panel;
-
-    for (pos, item) in document.page.frame.items() {
-        if let FrameItem::Group(group) = item {
-            let mut final_rect = Rect::from_pos(Pos2::new(
-                ratio * pos.x.to_pt() as f32,
-                ratio * pos.y.to_pt() as f32,
-            ));
-            final_rect.set_width(document.width * ratio);
-            final_rect.set_height((group.frame.height().to_pt() as f32) * ratio);
-            ui.painter().add(Shape::rect_stroke(
-                final_rect,
-                5.,
-                egui::Stroke::new(2., Color32::RED),
-                egui::StrokeKind::Inside,
-            ));
-        }
-    }
     Ok(document)
+}
+
+fn render_background(
+    ui: &mut Ui,
+    document: &DocumentPage,
+    texture_handle: &mut egui::TextureHandle,
+) {
+    let final_img = ColorImage::from_rgba_unmultiplied(
+        [
+            document.image.width as usize,
+            document.image.height as usize,
+        ],
+        document.as_vec(),
+    );
+
+    // set the background image derived from the typst document
+    texture_handle.set(final_img, egui::TextureOptions::NEAREST);
+    let size = texture_handle.size_vec2();
+    let sized_texture = egui::load::SizedTexture::new(texture_handle, size);
+    ui.add(egui::Image::new(sized_texture));
 }
 
 impl eframe::App for App {
@@ -86,31 +86,24 @@ impl eframe::App for App {
                 });
 
                 // get the document
-                let document = get_document(ui).expect("Error with typst document");
+                let document =
+                    get_document(ui.available_size()).expect("Error with typst document");
 
-                let final_img = ColorImage::from_rgba_unmultiplied(
-                    [
-                        document.image.width as usize,
-                        document.image.height as usize,
-                    ],
-                    document.as_vec(),
-                );
+                // draw the document as a texture in the background
+                render_background(ui, &document, &mut self.texture);
 
-                // set the background image derived from the typst document
-                self.texture.set(final_img, egui::TextureOptions::NEAREST);
-                let size = self.texture.size_vec2();
-                let sized_texture = egui::load::SizedTexture::new(&self.texture, size);
-                ui.add(egui::Image::new(sized_texture));
-
-                // for frame in item_positions.iter() {
-                // println!("{}, {}", item_positions[0].0, item_positions[0].1);
-                // ui.painter().add(Shape::rect_stroke(
-                //     Rect::from_two_pos(item_positions[0].0, item_positions[0].1),
-                //     5.,
-                //     egui::Stroke::new(5., Color32::RED),
-                //     egui::StrokeKind::Inside,
-                // ));
-                // }
+                let blocks = document.get_data_blocks();
+                for block in blocks.iter() {
+                    let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
+                    final_rect.set_width(document.image.width as f32);
+                    final_rect.set_height(block.height);
+                    ui.painter().add(Shape::rect_stroke(
+                        final_rect,
+                        5.,
+                        egui::Stroke::new(2., Color32::RED),
+                        egui::StrokeKind::Inside,
+                    ));
+                }
 
                 // debug helpers
                 if cfg!(debug_assertions) {

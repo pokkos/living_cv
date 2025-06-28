@@ -9,7 +9,7 @@ use typst::{
     Library, World,
     diag::{FileError, FileResult},
     foundations::{Bytes, Datetime},
-    layout::{Page, PagedDocument},
+    layout::{FrameItem, Page, PagedDocument},
     syntax::{FileId, Source},
     text::{Font, FontBook},
     utils::LazyHash,
@@ -37,6 +37,13 @@ pub struct Image {
     pub data: Vec<u8>,
     pub width: u32,
     pub height: u32,
+}
+
+pub struct DataBlock {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 impl DocumentPage {
@@ -85,6 +92,24 @@ impl DocumentPage {
 
     pub fn as_vec(&self) -> &Vec<u8> {
         &self.image.data
+    }
+
+    pub fn get_data_blocks(&self) -> Vec<DataBlock> {
+        let mut blocks = Vec::new();
+
+        for (pos, item) in self.page.frame.items() {
+            if let FrameItem::Group(group) = item {
+                let block = DataBlock {
+                    x: self.ratio_page_to_panel * pos.x.to_pt() as f32,
+                    y: self.ratio_page_to_panel * pos.y.to_pt() as f32,
+                    width: self.width,
+                    height: group.frame.height().to_pt() as f32 * self.ratio_page_to_panel,
+                };
+                blocks.push(block);
+            }
+        }
+
+        blocks
     }
 }
 
