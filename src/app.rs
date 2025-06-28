@@ -100,6 +100,7 @@ impl eframe::App for App {
         CentralPanel::default()
             .frame(egui::Frame::default().inner_margin(0.0).outer_margin(0.0))
             .show(ctx, |ui| {
+                #[cfg(not(target_arch = "wasm32"))]
                 ui.input(|i| {
                     if i.key_pressed(egui::Key::Q) {
                         let ctx = ctx.clone();
