@@ -1,7 +1,6 @@
 use crate::{document::DocumentPage, pulse::Circle};
 use egui::{
-    CentralPanel, Color32, ColorImage, Context, Frame, Id, Label, Modal, Pos2, Rect, Ui, Vec2,
-    Visuals,
+    CentralPanel, Color32, ColorImage, Context, Frame, Id, Modal, Pos2, Rect, Ui, Vec2, Visuals,
 };
 
 pub struct App {
@@ -32,6 +31,29 @@ impl App {
                 .expect("Error with the typst document"),
             recompile_needed: true,
         }
+    }
+
+    fn recompile(&mut self) {
+        // get the document
+        self.document = get_document(self.canvas_size).expect("Error with typst document");
+
+        // clear the stored data blocks
+        self.areas.clear();
+
+        // analyze the document
+        let blocks = self.document.get_data_blocks();
+        for block in blocks.iter() {
+            let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
+            final_rect.set_width(self.document.image.width as f32);
+            final_rect.set_height(block.height);
+
+            let new_id = format!("area_{}", self.areas.len());
+            let new_area = Circle::new(final_rect, new_id);
+            self.areas.push(new_area);
+        }
+
+        // reset the flag
+        self.recompile_needed = false;
     }
 }
 
@@ -89,36 +111,11 @@ impl eframe::App for App {
 
                 // only recompile and analyze the document on start and when the screen area changed
                 if self.recompile_needed {
-                    // get the document
-                    self.document = get_document(size).expect("Error with typst document");
-
-                    // clear the stored data blocks
-                    self.areas.clear();
-
-                    // analyze the document
-                    let blocks = self.document.get_data_blocks();
-                    for block in blocks.iter() {
-                        let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
-                        final_rect.set_width(self.document.image.width as f32);
-                        final_rect.set_height(block.height);
-
-                        let new_id = format!("area_{}", self.areas.len());
-                        let new_area = Circle::new(final_rect, new_id);
-                        self.areas.push(new_area);
-                    }
-
-                    // reset the flag
-                    self.recompile_needed = false;
-                    println!("Recompiled");
-                }
+                    self.recompile()
+                };
 
                 // draw the document as a texture in the background
                 render_background(ui, &self.document, &mut self.texture);
-
-                // debug helpers
-                // if cfg!(debug_assertions) {
-                //     debug_output(ui);
-                // }
 
                 // check for hovering areas and start the relevant animation
                 for pulse in self.areas.iter_mut() {
@@ -153,16 +150,4 @@ impl eframe::App for App {
                 }
             });
     }
-}
-
-fn debug_output(ui: &mut Ui) {
-    ui.put(
-        Rect::from_min_max((0., 0.).into(), (100., 50.).into()),
-        Label::new(
-            ui.ctx()
-                .pointer_latest_pos()
-                .unwrap_or(Pos2 { x: -1., y: -1. })
-                .to_string(),
-        ),
-    );
 }
