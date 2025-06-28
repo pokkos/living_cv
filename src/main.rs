@@ -1,4 +1,5 @@
 mod app;
+mod document;
 mod pulse;
 
 #[cfg(not(target_arch = "wasm32"))]
