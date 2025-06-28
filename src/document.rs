@@ -4,10 +4,12 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use egui::Vec2;
 use typst::{
     Library, World,
     diag::{FileError, FileResult},
     foundations::{Bytes, Datetime},
+    layout::{Page, PagedDocument},
     syntax::{FileId, Source},
     text::{Font, FontBook},
     utils::LazyHash,
@@ -21,6 +23,69 @@ pub struct TypstWorld {
     root: PathBuf,
     files: Arc<Mutex<HashMap<FileId, FileEntry>>>,
     fonts: Vec<FontSlot>,
+}
+
+pub struct DocumentPage {
+    pub width: f32,
+    pub height: f32,
+    pub page: Page,
+    pub image: Image,
+    pub ratio_page_to_panel: f32,
+}
+
+pub struct Image {
+    pub data: Vec<u8>,
+    pub width: u32,
+    pub height: u32,
+}
+
+impl DocumentPage {
+    pub fn new(input: &str, panel_size: Vec2) -> Result<Self, String> {
+        let world = TypstWorld::new(input.to_string());
+        let document: PagedDocument = typst::compile(&world).output.expect("Typst compile error.");
+
+        if document.pages.is_empty() {
+            return Err("No pages found".to_string());
+        }
+
+        // for now only take the first page
+        let page = document.pages[0].clone();
+
+        let width = page.frame.size().x.to_pt() as f32;
+        let height = page.frame.size().y.to_pt() as f32;
+        let page_ratio = width / height;
+
+        let (panel_width, panel_height) = (panel_size.x, panel_size.y);
+        let panel_ratio = panel_width / panel_height;
+
+        let ratio_page_to_panel = if panel_ratio < page_ratio {
+            panel_height / height / panel_ratio
+        } else {
+            panel_width / width / panel_ratio
+        };
+
+        // convert the page to image data using the ratio between the page and the canvas geometry
+        let pixmap = typst_render::render(&page, ratio_page_to_panel);
+        let pic_width = pixmap.width();
+        let pic_height = pixmap.height();
+        let image = Image {
+            data: pixmap.take(),
+            width: pic_width,
+            height: pic_height,
+        };
+
+        Ok(Self {
+            width,
+            height,
+            page,
+            image,
+            ratio_page_to_panel,
+        })
+    }
+
+    pub fn as_vec(&self) -> &Vec<u8> {
+        &self.image.data
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -51,7 +116,7 @@ impl FileEntry {
 }
 
 impl TypstWorld {
-    pub fn new(source: String) -> Self {
+    fn new(source: String) -> Self {
         let fonts = FontSearcher::new().include_system_fonts(true).search();
         Self {
             source: Source::detached(source),

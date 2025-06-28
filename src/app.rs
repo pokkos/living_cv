@@ -1,9 +1,9 @@
-use crate::{document::TypstWorld, pulse::Circle};
+use crate::{document::DocumentPage, pulse::Circle};
 use egui::{
     CentralPanel, Color32, ColorImage, Context, Frame, Id, Label, Modal, Pos2, Rect, Shape, Ui,
     Vec2, Visuals,
 };
-use typst::layout::{FrameItem, PagedDocument};
+use typst::layout::FrameItem;
 
 pub struct App {
     circles: Vec<Circle>,
@@ -41,40 +41,20 @@ impl App {
     }
 }
 
-fn document_info(ui: &Ui) -> (u32, u32, Vec<u8>) {
-    let content = std::include_str!("../assets/cv.typ").to_string();
+fn get_document(ui: &Ui) -> Result<DocumentPage, String> {
+    let content = std::include_str!("../assets/cv.typ");
 
-    let world = TypstWorld::new(content);
-    let document: PagedDocument = typst::compile(&world).output.expect("Compile error.");
-    let mut item_positions: Vec<(Pos2, Pos2)> = Vec::new();
+    let document = DocumentPage::new(content, ui.available_size())?;
 
-    let panel_height = ui.available_height();
-    let panel_width = ui.available_width();
-    let doc_height = document.pages[0].frame.size().y.to_pt() as f32;
-    let doc_width = document.pages[0].frame.size().x.to_pt() as f32;
-    let panel_ratio = panel_width / panel_height;
-    let doc_ratio = doc_width / doc_height;
-    let ratio = if panel_ratio < doc_ratio {
-        panel_height / doc_height / panel_ratio
-    } else {
-        panel_width / doc_width / panel_ratio
-    };
+    let ratio = document.ratio_page_to_panel;
 
-    // save the document as an image buffer
-    let pixmap = typst_render::render(&document.pages[0], ratio);
-    let pic_width = pixmap.width();
-    let pic_height = pixmap.height();
-    let pic: Vec<u8> = pixmap.take();
-
-    for (pos, item) in document.pages[0].frame.items() {
+    for (pos, item) in document.page.frame.items() {
         if let FrameItem::Group(group) = item {
-            item_positions.push((Pos2::default(), Pos2::default()));
-
             let mut final_rect = Rect::from_pos(Pos2::new(
                 ratio * pos.x.to_pt() as f32,
                 ratio * pos.y.to_pt() as f32,
             ));
-            final_rect.set_width(doc_width * ratio);
+            final_rect.set_width(document.width * ratio);
             final_rect.set_height((group.frame.height().to_pt() as f32) * ratio);
             ui.painter().add(Shape::rect_stroke(
                 final_rect,
@@ -82,16 +62,9 @@ fn document_info(ui: &Ui) -> (u32, u32, Vec<u8>) {
                 egui::Stroke::new(2., Color32::RED),
                 egui::StrokeKind::Inside,
             ));
-            println!(
-                "Group info: {:?} - Group size: {:?}",
-                pos,
-                group.frame.size()
-            );
         }
-
-        // item_positions.push((x_current_group, y_current_group));
     }
-    (pic_width, pic_height, pic)
+    Ok(document)
 }
 
 impl eframe::App for App {
@@ -112,12 +85,15 @@ impl eframe::App for App {
                     }
                 });
 
-                // get information about the document
-                let (page_width, page_height, pic) = document_info(ui);
+                // get the document
+                let document = get_document(ui).expect("Error with typst document");
 
                 let final_img = ColorImage::from_rgba_unmultiplied(
-                    [page_width as usize, page_height as usize],
-                    pic.as_slice(),
+                    [
+                        document.image.width as usize,
+                        document.image.height as usize,
+                    ],
+                    document.as_vec(),
                 );
 
                 // set the background image derived from the typst document
