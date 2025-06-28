@@ -1,4 +1,6 @@
-use egui::{Color32, Id, Pos2, Rect, Response, Sense, Stroke, Ui, Widget, epaint::CircleShape};
+use egui::{
+    Color32, Id, Pos2, Rect, Response, Sense, Shape, Stroke, Ui, Widget, epaint::CircleShape,
+};
 
 const MIN_RADIUS: f32 = 1.;
 const MAX_RADIUS: f32 = 10.;
@@ -71,9 +73,9 @@ impl Widget for &mut Circle {
         // allocate the hover rectangle that enables the animation and interaction
         let resp = ui.allocate_rect(self.hover_rect, Sense::click());
 
-        if cfg!(debug_assertions) {
-            resp.paint_debug_info();
-        }
+        // if cfg!(debug_assertions) {
+        //     resp.paint_debug_info();
+        // }
 
         // fix the animation flickering by setting the previous radius when the state changes
         if !self.is_animated && self.was_animated {
@@ -96,6 +98,16 @@ impl Widget for &mut Circle {
                 .animate_value_with_time(self.id, MAX_RADIUS, ANIMATION_TIME);
             ui.ctx().request_repaint();
             self.was_animated = true;
+        }
+
+        // draw the rectangle when hovered
+        if resp.contains_pointer() {
+            ui.painter().add(Shape::rect_stroke(
+                self.hover_rect,
+                5.,
+                egui::Stroke::new(2., Color32::RED),
+                egui::StrokeKind::Inside,
+            ));
         }
 
         // actually draw the circle if it's in view

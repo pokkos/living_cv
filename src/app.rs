@@ -1,11 +1,11 @@
 use crate::{document::DocumentPage, pulse::Circle};
 use egui::{
-    CentralPanel, Color32, ColorImage, Context, Frame, Id, Label, Modal, Pos2, Rect, Shape, Ui,
-    Vec2, Visuals,
+    CentralPanel, Color32, ColorImage, Context, Frame, Id, Label, Modal, Pos2, Rect, Ui, Vec2,
+    Visuals,
 };
 
 pub struct App {
-    circles: Vec<Circle>,
+    areas: Vec<Circle>,
     texture: egui::TextureHandle,
 }
 
@@ -17,20 +17,8 @@ impl App {
             ..Default::default()
         });
 
-        // temporarily hard-coded coordinates
-        let circles = vec![
-            Circle::new(
-                Rect::from_min_max((120., 265.).into(), (865., 455.).into()),
-                "pulse_1".into(),
-            ),
-            Circle::new(
-                Rect::from_min_max((120., 500.).into(), (865., 690.).into()),
-                "pulse_2".into(),
-            ),
-        ];
-
         Self {
-            circles,
+            areas: Vec::new(),
             texture: cc.egui_ctx.load_texture(
                 "background",
                 egui::ColorImage::example(),
@@ -97,21 +85,19 @@ impl eframe::App for App {
                     let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
                     final_rect.set_width(document.image.width as f32);
                     final_rect.set_height(block.height);
-                    ui.painter().add(Shape::rect_stroke(
-                        final_rect,
-                        5.,
-                        egui::Stroke::new(2., Color32::RED),
-                        egui::StrokeKind::Inside,
-                    ));
+
+                    let new_id = format!("area_{}", self.areas.len());
+                    let new_area = Circle::new(final_rect, new_id.into());
+                    self.areas.push(new_area);
                 }
 
                 // debug helpers
-                if cfg!(debug_assertions) {
-                    debug_output(ui);
-                }
+                // if cfg!(debug_assertions) {
+                //     debug_output(ui);
+                // }
 
                 // check for hovering areas and start the relevant animation
-                for pulse in self.circles.iter_mut() {
+                for pulse in self.areas.iter_mut() {
                     let resp = ui.add(&mut *pulse);
 
                     // animate the circle that is in the hovered region
