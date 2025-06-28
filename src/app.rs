@@ -101,7 +101,7 @@ impl eframe::App for App {
 
     fn update(&mut self, ctx: &Context, _: &mut eframe::Frame) {
         CentralPanel::default()
-            // .frame(egui::Frame::default().inner_margin(0.0).outer_margin(0.0))
+            .frame(egui::Frame::default().inner_margin(0.0).outer_margin(0.0))
             .show(ctx, |ui| {
                 ui.input(|i| {
                     if i.key_pressed(egui::Key::Q) {
