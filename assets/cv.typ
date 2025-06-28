@@ -1,4 +1,4 @@
-#set page(paper:"a4", fill: none)
+#set page(paper:"a4", margin: (x: 8pt, y: 8pt), fill: none)
 #let myblock = block.with(inset: 1em)
 
 // #block(inset:1em)[
