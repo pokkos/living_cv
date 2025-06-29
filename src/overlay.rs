@@ -7,13 +7,11 @@ const MAX_RADIUS: f32 = 10.;
 const ANIMATION_TIME: f32 = 1.5;
 
 pub struct Overlay {
-    id: Id,
-    radius: f32,
-    is_animated: bool,
-    was_animated: bool,
     hover_rect: Rect,
+    id: Id,
     is_popup_visible: bool,
     position: Pos2,
+    radius: f32,
 }
 
 impl Overlay {
@@ -22,31 +20,9 @@ impl Overlay {
             id: Id::from(id),
             hover_rect: rect,
             radius: MIN_RADIUS,
-            is_animated: true,
-            was_animated: true,
             is_popup_visible: false,
-            position: Pos2 { x: 0., y: 0. },
+            position: Pos2::default(),
         }
-    }
-
-    pub fn start_animation(&mut self) {
-        self.is_animated = true;
-    }
-
-    pub fn stop_animation(&mut self) {
-        self.is_animated = false;
-    }
-
-    pub fn toggle_animation(&mut self) {
-        self.is_animated = !self.is_animated;
-    }
-
-    pub fn get_rect(&self) -> Rect {
-        self.hover_rect
-    }
-
-    pub fn get_position(&self) -> Pos2 {
-        self.position
     }
 
     pub fn show_popup(&mut self) {
@@ -68,42 +44,31 @@ impl Widget for &mut Overlay {
         self.position = self.hover_rect.right_center();
         self.position.x -= 2. * MAX_RADIUS;
 
-        let stroke = Stroke::new(3., Color32::MAGENTA);
+        let stroke = Stroke::new(3., Color32::from_hex("#09a7cb").unwrap());
 
         // allocate the hover rectangle that enables the animation and interaction
         let resp = ui.allocate_rect(self.hover_rect, Sense::click());
 
-        // fix the animation flickering by setting the previous radius when the state changes
-        if !self.is_animated && self.was_animated {
-            ui.ctx().clear_animations();
-            self.radius = ui.ctx().animate_value_with_time(self.id, self.radius, 0.);
-            ui.ctx().request_repaint();
-            self.was_animated = false;
-        }
-
-        // if the animation is stopped or the maximum radius is reached, reset the radius to the min value
-        if self.radius == MAX_RADIUS || !self.is_animated {
-            self.radius = ui.ctx().animate_value_with_time(self.id, MIN_RADIUS, 0.);
-            ui.ctx().request_repaint();
-        }
-
-        // animate the radius of the circle
-        if self.is_animated {
-            self.radius = ui
-                .ctx()
-                .animate_value_with_time(self.id, MAX_RADIUS, ANIMATION_TIME);
-            ui.ctx().request_repaint();
-            self.was_animated = true;
-        }
-
-        // draw the rectangle when hovered
+        // draw the rectangle when hovered and animate the circle
         if resp.contains_pointer() {
             ui.painter().add(Shape::rect_stroke(
                 self.hover_rect,
                 5.,
-                egui::Stroke::new(2., Color32::RED),
+                egui::Stroke::new(2., Color32::from_hex("#09a7cb").unwrap()),
                 egui::StrokeKind::Inside,
             ));
+
+            if self.radius >= MAX_RADIUS {
+                self.radius = ui.ctx().animate_value_with_time(self.id, MIN_RADIUS, 0.);
+            }
+
+            self.radius = ui
+                .ctx()
+                .animate_value_with_time(self.id, MAX_RADIUS, ANIMATION_TIME);
+        } else {
+            self.radius =
+                ui.ctx()
+                    .animate_value_with_time(self.id, MIN_RADIUS, ANIMATION_TIME / 4.);
         }
 
         // actually draw the circle if it's in view
@@ -115,6 +80,8 @@ impl Widget for &mut Overlay {
                 stroke,
             });
         }
+
+        ui.ctx().request_repaint();
 
         resp
     }
