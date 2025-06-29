@@ -122,17 +122,10 @@ impl eframe::App for App {
                 for area in self.areas.iter_mut() {
                     let resp = ui.add(&mut *area);
 
-                    // animate the circle that is in the hovered region
-                    if resp.contains_pointer() {
-                        area.start_animation();
-                    } else {
-                        area.stop_animation();
-                    };
-
-                    // open the window at the position where the circle is
+                    // open the modal window
                     if resp.clicked() && !area.is_popup_visible() {
                         area.show_popup();
-                    };
+                    }
 
                     if resp.clicked_elsewhere() {
                         area.hide_popup();
