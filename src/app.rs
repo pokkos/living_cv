@@ -1,10 +1,10 @@
-use crate::{document::DocumentPage, pulse::Circle};
+use crate::{document::DocumentPage, overlay::Overlay};
 use egui::{
     CentralPanel, Color32, ColorImage, Context, Frame, Id, Modal, Pos2, Rect, Ui, Vec2, Visuals,
 };
 
 pub struct App {
-    areas: Vec<Circle>,
+    areas: Vec<Overlay>,
     texture: egui::TextureHandle,
     canvas_size: Vec2,
     document: DocumentPage,
@@ -48,7 +48,7 @@ impl App {
             final_rect.set_height(block.height);
 
             let new_id = format!("area_{}", self.areas.len());
-            let new_area = Circle::new(final_rect, new_id);
+            let new_area = Overlay::new(final_rect, new_id);
             self.areas.push(new_area);
         }
 
@@ -119,26 +119,26 @@ impl eframe::App for App {
                 render_background(ui, &self.document, &mut self.texture);
 
                 // check for hovering areas and start the relevant animation
-                for pulse in self.areas.iter_mut() {
-                    let resp = ui.add(&mut *pulse);
+                for area in self.areas.iter_mut() {
+                    let resp = ui.add(&mut *area);
 
                     // animate the circle that is in the hovered region
                     if resp.contains_pointer() {
-                        pulse.start_animation();
+                        area.start_animation();
                     } else {
-                        pulse.stop_animation();
+                        area.stop_animation();
                     };
 
                     // open the window at the position where the circle is
-                    if resp.clicked() && !pulse.is_popup_visible() {
-                        pulse.show_popup();
+                    if resp.clicked() && !area.is_popup_visible() {
+                        area.show_popup();
                     };
 
                     if resp.clicked_elsewhere() {
-                        pulse.hide_popup();
+                        area.hide_popup();
                     }
 
-                    if pulse.is_popup_visible() {
+                    if area.is_popup_visible() {
                         Modal::new(Id::new("modal"))
                             .backdrop_color(Color32::from_hex("#aaddee55").unwrap())
                             .show(ui.ctx(), |ui| {

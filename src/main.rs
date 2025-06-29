@@ -1,6 +1,6 @@
 mod app;
 mod document;
-mod pulse;
+mod overlay;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {

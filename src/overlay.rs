@@ -6,7 +6,7 @@ const MIN_RADIUS: f32 = 1.;
 const MAX_RADIUS: f32 = 10.;
 const ANIMATION_TIME: f32 = 1.5;
 
-pub struct Circle {
+pub struct Overlay {
     id: Id,
     radius: f32,
     is_animated: bool,
@@ -16,7 +16,7 @@ pub struct Circle {
     position: Pos2,
 }
 
-impl Circle {
+impl Overlay {
     pub fn new(rect: Rect, id: String) -> Self {
         Self {
             id: Id::from(id),
@@ -62,7 +62,7 @@ impl Circle {
     }
 }
 
-impl Widget for &mut Circle {
+impl Widget for &mut Overlay {
     fn ui(self, ui: &mut Ui) -> Response {
         // set the position for the pulsating circle
         self.position = self.hover_rect.right_center();
