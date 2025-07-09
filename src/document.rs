@@ -65,10 +65,10 @@ impl DocumentPage {
         let (panel_width, panel_height) = (panel_size.x, panel_size.y);
         let panel_ratio = panel_width / panel_height;
 
-        let ratio_page_to_panel = if panel_ratio < page_ratio {
-            panel_height / height / panel_ratio
+        let ratio_page_to_panel = if panel_ratio > page_ratio {
+            panel_height / height
         } else {
-            panel_width / width / panel_ratio
+            panel_width / width
         };
 
         // convert the page to image data using the ratio between the page and the canvas geometry
