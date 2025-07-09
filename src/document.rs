@@ -199,8 +199,8 @@ impl World for TypstWorld {
     }
 
     #[doc = " Try to access the specified file."]
-    fn file(&self, _id: FileId) -> FileResult<Bytes> {
-        todo!()
+    fn file(&self, id: FileId) -> FileResult<Bytes> {
+        self.file(id).map(|file| file.bytes.clone())
     }
 
     #[doc = " Try to access the font with the given index in the font book."]
