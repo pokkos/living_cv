@@ -26,8 +26,6 @@ pub struct TypstWorld {
 }
 
 pub struct DocumentPage {
-    pub width: f32,
-    pub _height: f32,
     pub page: Page,
     pub image: Image,
     pub ratio_page_to_panel: f32,
@@ -82,8 +80,6 @@ impl DocumentPage {
         };
 
         Ok(Self {
-            width,
-            _height: height,
             page,
             image,
             ratio_page_to_panel,
