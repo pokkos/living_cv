@@ -44,7 +44,7 @@ impl App {
         let blocks = self.document.get_data_blocks();
         for block in blocks.iter() {
             let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
-            final_rect.set_width(self.document.image.width as f32);
+            final_rect.set_width(block.width);
             final_rect.set_height(block.height);
 
             let new_id = format!("area_{}", self.areas.len());
