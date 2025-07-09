@@ -40,7 +40,7 @@ pub struct Image {
 pub struct DataBlock {
     pub x: f32,
     pub y: f32,
-    pub _width: f32,
+    pub width: f32,
     pub height: f32,
 }
 
@@ -90,20 +90,56 @@ impl DocumentPage {
         &self.image.data
     }
 
-    pub fn get_data_blocks(&self) -> Vec<DataBlock> {
-        let mut blocks = Vec::new();
-
-        for (pos, item) in self.page.frame.items() {
-            if let FrameItem::Group(group) = item {
-                let block = DataBlock {
-                    x: self.ratio_page_to_panel * pos.x.to_pt() as f32,
-                    y: self.ratio_page_to_panel * pos.y.to_pt() as f32,
-                    _width: self.width,
-                    height: group.frame.height().to_pt() as f32 * self.ratio_page_to_panel,
-                };
-                blocks.push(block);
+    fn filter_for_relevant_blocks(
+        &self,
+        frame: &typst::layout::Frame,
+        mut blocks: Vec<DataBlock>,
+        offset: typst::layout::Point,
+    ) -> Vec<DataBlock> {
+        let mut grid_found = false;
+        for (pos, item) in frame.items() {
+            match item {
+                FrameItem::Group(group_item) => {
+                    if !grid_found {
+                        let offset = typst::layout::Point {
+                            x: offset.x + pos.x,
+                            y: offset.y + pos.y,
+                        };
+                        blocks = self.filter_for_relevant_blocks(&group_item.frame, blocks, offset);
+                    } else {
+                        grid_found = false;
+                        let pos = typst::layout::Point::new(pos.x + offset.x, pos.y + offset.y);
+                        let block = DataBlock {
+                            x: self.ratio_page_to_panel * pos.x.to_pt() as f32
+                                - (self.image.width as f32 * 0.005),
+                            y: self.ratio_page_to_panel * pos.y.to_pt() as f32
+                                - (self.image.height as f32 * 0.005),
+                            width: (self.image.width as f32 * 0.02)
+                                + group_item.frame.width().to_pt() as f32
+                                    * self.ratio_page_to_panel,
+                            height: (self.image.height as f32 * 0.01)
+                                + group_item.frame.height().to_pt() as f32
+                                    * self.ratio_page_to_panel,
+                        };
+                        blocks.push(block);
+                    }
+                }
+                FrameItem::Tag(typst::introspection::Tag::Start(content)) => {
+                    if content.elem().name() == "grid" {
+                        grid_found = true;
+                    }
+                }
+                _ => (),
             }
         }
+
+        blocks
+    }
+
+    pub fn get_data_blocks(&self) -> Vec<DataBlock> {
+        let mut blocks = Vec::new();
+        let offset = typst::layout::Point::zero();
+        blocks = self.filter_for_relevant_blocks(&self.page.frame, blocks, offset);
 
         blocks
     }
