@@ -5,6 +5,7 @@ use std::{
 };
 
 use egui::Vec2;
+use itertools::Itertools;
 use typst::{
     Library, World,
     diag::{FileError, FileResult},
@@ -46,7 +47,24 @@ pub struct DataBlock {
 
 impl DocumentPage {
     pub fn new(input: &str, panel_size: Vec2) -> Result<Self, String> {
-        let world = TypstWorld::new(input.to_string());
+        let mut world = TypstWorld::new(input.to_string());
+        let world_source = &mut world.source;
+
+        // flip to horizontal if width is bigger than height
+        if panel_size.x > panel_size.y {
+            let (line_idx, line_text) = world_source
+                .text()
+                .lines()
+                .find_position(|t| t.contains("flipped"))
+                .expect("No 'flipped' found.");
+            let replacement = line_text.replace("false", "true");
+            world_source.edit(
+                world_source.line_to_range(line_idx).unwrap(),
+                replacement.as_str(),
+            );
+        }
+
+        // compile the document
         let document: PagedDocument = typst::compile(&world).output.expect("Typst compile error.");
 
         if document.pages.is_empty() {
