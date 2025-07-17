@@ -8,6 +8,7 @@ eframe = "0.31.1"
 egui = "0.31.1"
 egui_extras = { version = "0.31.1", features = ["default", "all_loaders"] }
 image = { version = "0.25", features = ["jpeg", "png"] }
+include_dir = "0.7.4"
 itertools = "0.14.0"
 typst = "0.13.1"
 typst-kit = { version = "0.13.1", default-features = false, features = ["fonts", "embed-fonts"]}

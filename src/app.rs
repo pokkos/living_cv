@@ -58,10 +58,21 @@ impl App {
 }
 
 fn get_document(available_size: Vec2) -> Result<DocumentPage, String> {
-    let content = std::include_str!("../assets/cv.typ");
-    let document = DocumentPage::new(content, available_size)?;
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let content = std::include_str!("../assets/cv.typ");
+        let document = DocumentPage::new(content, available_size)?;
+        Ok(document)
+    }
 
-    Ok(document)
+    #[cfg(target_arch = "wasm32")]
+    {
+        let content_dir = include_dir::include_dir!("./assets/cv/");
+        let content_main_file = content_dir.get_file("main.typ").unwrap();
+        let content = content_main_file.contents_utf8().unwrap();
+        let document = DocumentPage::new(content, available_size, content_dir)?;
+        Ok(document)
+    }
 }
 
 fn render_background(

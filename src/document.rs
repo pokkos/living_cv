@@ -1,6 +1,5 @@
 use std::{
     collections::HashMap,
-    path::PathBuf,
     sync::{Arc, Mutex},
 };
 
@@ -21,9 +20,12 @@ pub struct TypstWorld {
     source: Source,
     library: LazyHash<Library>,
     book: LazyHash<FontBook>,
-    root: PathBuf,
+    #[cfg(not(target_arch = "wasm32"))]
+    root: std::path::PathBuf,
     files: Arc<Mutex<HashMap<FileId, FileEntry>>>,
     fonts: Vec<FontSlot>,
+    #[cfg(target_arch = "wasm32")]
+    content_dir: include_dir::Dir<'static>,
 }
 
 pub struct DocumentPage {
@@ -46,8 +48,23 @@ pub struct DataBlock {
 }
 
 impl DocumentPage {
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn new(input: &str, panel_size: Vec2) -> Result<Self, String> {
-        let mut world = TypstWorld::new(input.to_string());
+        let world = TypstWorld::new(input.to_string());
+        DocumentPage::new_followup(world, panel_size)
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn new(
+        input: &str,
+        panel_size: Vec2,
+        content_dir: include_dir::Dir<'static>,
+    ) -> Result<Self, String> {
+        let world = TypstWorld::new(input.to_string(), content_dir);
+        DocumentPage::new_followup(world, panel_size)
+    }
+
+    pub fn new_followup(mut world: TypstWorld, panel_size: Vec2) -> Result<Self, String> {
         let world_source = &mut world.source;
 
         // flip to horizontal if width is bigger than height
@@ -57,7 +74,6 @@ impl DocumentPage {
                 .lines()
                 .find_position(|t| t.contains("flipped"))
             {
-                // .expect("No 'flipped' found.");
                 let replacement = line_text.replace("false", "true");
                 world_source.edit(
                     world_source.line_to_range(line_idx).unwrap(),
@@ -193,32 +209,69 @@ impl FileEntry {
 }
 
 impl TypstWorld {
+    #[cfg(not(target_arch = "wasm32"))]
     fn new(source: String) -> Self {
         let fonts = FontSearcher::new().include_system_fonts(true).search();
         Self {
             source: Source::detached(source),
             library: LazyHash::new(Library::default()),
             book: LazyHash::new(fonts.book),
-            root: PathBuf::from("../"),
+            root: std::path::PathBuf::from("./assets/"),
             files: Arc::new(Mutex::new(HashMap::new())),
             fonts: fonts.fonts,
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
+    fn new(source: String, content_dir: include_dir::Dir<'static>) -> Self {
+        let fonts = FontSearcher::new().include_system_fonts(true).search();
+        Self {
+            source: Source::detached(source),
+            library: LazyHash::new(Library::default()),
+            book: LazyHash::new(fonts.book),
+            files: Arc::new(Mutex::new(HashMap::new())),
+            fonts: fonts.fonts,
+            content_dir,
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     fn file(&self, id: FileId) -> FileResult<FileEntry> {
         let mut files = self.files.lock().map_err(|_| FileError::AccessDenied)?;
         if let Some(entry) = files.get(&id) {
             return Ok(entry.clone());
         }
+
         let path = id
             .vpath()
             .resolve(&self.root)
             .ok_or(FileError::AccessDenied)?;
 
         let content = std::fs::read(&path).map_err(|error| FileError::from_io(error, &path))?;
+
         Ok(files
             .entry(id)
             .or_insert(FileEntry::new(content, None))
+            .clone())
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    fn file(&self, id: FileId) -> FileResult<FileEntry> {
+        let mut files = self.files.lock().map_err(|_| FileError::AccessDenied)?;
+        if let Some(entry) = files.get(&id) {
+            return Ok(entry.clone());
+        }
+
+        let path = id
+            .vpath()
+            .as_rootless_path()
+            .to_str()
+            .ok_or(FileError::AccessDenied)?;
+
+        let content = self.content_dir.get_file(path).unwrap();
+        Ok(files
+            .entry(id)
+            .or_insert(FileEntry::new(content.contents().to_vec(), None))
             .clone())
     }
 }
