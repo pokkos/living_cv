@@ -52,16 +52,18 @@ impl DocumentPage {
 
         // flip to horizontal if width is bigger than height
         if panel_size.x > panel_size.y {
-            let (line_idx, line_text) = world_source
+            if let Some((line_idx, line_text)) = world_source
                 .text()
                 .lines()
                 .find_position(|t| t.contains("flipped"))
-                .expect("No 'flipped' found.");
-            let replacement = line_text.replace("false", "true");
-            world_source.edit(
-                world_source.line_to_range(line_idx).unwrap(),
-                replacement.as_str(),
-            );
+            {
+                // .expect("No 'flipped' found.");
+                let replacement = line_text.replace("false", "true");
+                world_source.edit(
+                    world_source.line_to_range(line_idx).unwrap(),
+                    replacement.as_str(),
+                );
+            }
         }
 
         // compile the document
