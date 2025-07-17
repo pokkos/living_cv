@@ -136,13 +136,7 @@ impl DocumentPage {
         for (pos, item) in frame.items() {
             match item {
                 FrameItem::Group(group_item) => {
-                    if !grid_found {
-                        let offset = typst::layout::Point {
-                            x: offset.x + pos.x,
-                            y: offset.y + pos.y,
-                        };
-                        blocks = self.filter_for_relevant_blocks(&group_item.frame, blocks, offset);
-                    } else {
+                    if grid_found {
                         grid_found = false;
                         let pos = typst::layout::Point::new(pos.x + offset.x, pos.y + offset.y);
                         let block = DataBlock {
@@ -158,6 +152,12 @@ impl DocumentPage {
                                     * self.ratio_page_to_panel,
                         };
                         blocks.push(block);
+                    } else {
+                        let offset = typst::layout::Point {
+                            x: offset.x + pos.x,
+                            y: offset.y + pos.y,
+                        };
+                        blocks = self.filter_for_relevant_blocks(&group_item.frame, blocks, offset);
                     }
                 }
                 FrameItem::Tag(typst::introspection::Tag::Start(content)) => {

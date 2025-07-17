@@ -42,7 +42,7 @@ impl App {
 
         // analyze the document
         let blocks = self.document.get_data_blocks();
-        for block in blocks.iter() {
+        for block in &blocks {
             let mut final_rect = Rect::from_pos(Pos2::new(block.x, block.y));
             final_rect.set_width(block.width);
             final_rect.set_height(block.height);
@@ -123,14 +123,14 @@ impl eframe::App for App {
 
                 // only recompile and analyze the document on start and when the screen area changed
                 if self.recompile_needed {
-                    self.recompile()
-                };
+                    self.recompile();
+                }
 
                 // draw the document as a texture in the background
                 render_background(ui, &self.document, &mut self.texture);
 
                 // check for hovering areas and start the relevant animation
-                for area in self.areas.iter_mut() {
+                for area in &mut self.areas {
                     let resp = ui.add(&mut *area);
 
                     // open the modal window
