@@ -45,6 +45,7 @@ pub struct DataBlock {
     pub y: f32,
     pub width: f32,
     pub height: f32,
+    pub label: String,
 }
 
 impl DocumentPage {
@@ -143,6 +144,7 @@ impl DocumentPage {
         offset: typst::layout::Point,
     ) -> Vec<DataBlock> {
         let mut grid_found = false;
+        let mut label_takeover = String::new();
         let outset = 8.;
 
         for (pos, item) in frame.items() {
@@ -161,8 +163,11 @@ impl DocumentPage {
                             height: group_item.frame.height().to_pt() as f32
                                 * self.ratio_page_to_panel
                                 + (2. * outset),
+                            label: label_takeover.clone(),
                         };
+
                         blocks.push(block);
+                        label_takeover.clear();
                     } else {
                         let offset = typst::layout::Point {
                             x: offset.x + pos.x,
@@ -174,6 +179,8 @@ impl DocumentPage {
                 FrameItem::Tag(typst::introspection::Tag::Start(content)) => {
                     if content.elem().name() == "grid" {
                         grid_found = true;
+                        let label = content.label().unwrap().resolve();
+                        label_takeover = String::from(label.as_str());
                     }
                 }
                 _ => (),

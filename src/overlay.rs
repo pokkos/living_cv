@@ -3,13 +3,15 @@ use egui::{Color32, Rect, Response, Sense, Shape, Ui, Widget};
 pub struct Overlay {
     hover_rect: Rect,
     is_popup_visible: bool,
+    label: String,
 }
 
 impl Overlay {
-    pub fn new(rect: Rect) -> Self {
+    pub fn new(rect: Rect, label: String) -> Self {
         Self {
             hover_rect: rect,
             is_popup_visible: false,
+            label,
         }
     }
 
@@ -55,6 +57,20 @@ impl Widget for &mut Overlay {
                 egui::Stroke::new(stroke_width, stroke_color),
                 egui::StrokeKind::Inside,
             ));
+
+            if self.is_popup_visible() {
+                egui::Modal::new(egui::Id::new("modal"))
+                    .backdrop_color(Color32::from_hex("#aaddee55").unwrap())
+                    .show(ui.ctx(), |ui| {
+                        ui.visuals_mut().faint_bg_color = Color32::RED;
+                        egui::Frame::canvas(ui.style())
+                            .fill(Color32::from_hex("#ccdde9").unwrap())
+                            .show(ui, |ui| {
+                                // ui.allocate_space(egui::Vec2 { x: 400., y: 300. });
+                                ui.label(&self.label);
+                            });
+                    });
+            }
         }
 
         ui.ctx().request_repaint();

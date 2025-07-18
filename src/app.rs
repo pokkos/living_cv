@@ -47,7 +47,7 @@ impl App {
             final_rect.set_width(block.width);
             final_rect.set_height(block.height);
 
-            let new_area = Overlay::new(final_rect);
+            let new_area = Overlay::new(final_rect, block.label.clone());
             self.areas.push(new_area);
         }
 
@@ -139,17 +139,6 @@ impl eframe::App for App {
 
                     if resp.clicked_elsewhere() {
                         area.hide_popup();
-                    }
-
-                    if area.is_popup_visible() {
-                        Modal::new(Id::new("modal"))
-                            .backdrop_color(Color32::from_hex("#aaddee55").unwrap())
-                            .show(ui.ctx(), |ui| {
-                                ui.visuals_mut().faint_bg_color = Color32::RED;
-                                Frame::canvas(ui.style())
-                                    .fill(Color32::from_hex("#ccdde9").unwrap())
-                                    .show(ui, |ui| ui.allocate_space(Vec2 { x: 400., y: 300. }));
-                            });
                     }
                 }
             });
