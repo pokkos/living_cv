@@ -80,6 +80,17 @@ impl DocumentPage {
                     replacement.as_str(),
                 );
             }
+
+            // change the style_portrait.typ file to style_landscape.typ if they exist
+            if let Some((line_idx, line_text)) = world_source
+                .text()
+                .lines()
+                .enumerate()
+                .find(|(_, line_text)| line_text.contains("style_portrait.typ"))
+            {
+                let replacement = line_text.replace("style_portrait.typ", "style_landscape.typ");
+                world_source.edit(world_source.line_to_range(line_idx).unwrap(), &replacement);
+            }
         }
 
         // compile the document
