@@ -47,8 +47,7 @@ impl App {
             final_rect.set_width(block.width);
             final_rect.set_height(block.height);
 
-            let new_id = format!("area_{}", self.areas.len());
-            let new_area = Overlay::new(final_rect, new_id);
+            let new_area = Overlay::new(final_rect);
             self.areas.push(new_area);
         }
 
