@@ -144,23 +144,24 @@ impl DocumentPage {
         offset: typst::layout::Point,
     ) -> Vec<DataBlock> {
         let mut grid_found = false;
+        let outset = 8.;
+
         for (pos, item) in frame.items() {
             match item {
                 FrameItem::Group(group_item) => {
                     if grid_found {
                         grid_found = false;
                         let pos = typst::layout::Point::new(pos.x + offset.x, pos.y + offset.y);
+
                         let block = DataBlock {
-                            x: self.ratio_page_to_panel * pos.x.to_pt() as f32
-                                - (self.image.width as f32 * 0.005),
-                            y: self.ratio_page_to_panel * pos.y.to_pt() as f32
-                                - (self.image.height as f32 * 0.005),
-                            width: (self.image.width as f32 * 0.02)
-                                + group_item.frame.width().to_pt() as f32
-                                    * self.ratio_page_to_panel,
-                            height: (self.image.height as f32 * 0.01)
-                                + group_item.frame.height().to_pt() as f32
-                                    * self.ratio_page_to_panel,
+                            x: self.ratio_page_to_panel * pos.x.to_pt() as f32 - outset,
+                            y: self.ratio_page_to_panel * pos.y.to_pt() as f32 - outset,
+                            width: group_item.frame.width().to_pt() as f32
+                                * self.ratio_page_to_panel
+                                + (2. * outset),
+                            height: group_item.frame.height().to_pt() as f32
+                                * self.ratio_page_to_panel
+                                + (2. * outset),
                         };
                         blocks.push(block);
                     } else {
