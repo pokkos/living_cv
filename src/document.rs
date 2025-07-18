@@ -85,10 +85,9 @@ impl DocumentPage {
             if let Some((line_idx, line_text)) = world_source
                 .text()
                 .lines()
-                .enumerate()
-                .find(|(_, line_text)| line_text.contains("style_portrait.typ"))
+                .find_position(|t| t.contains("style_portrait.typ"))
             {
-                let replacement = line_text.replace("style_portrait.typ", "style_landscape.typ");
+                let replacement = line_text.replace("portrait", "landscape");
                 world_source.edit(world_source.line_to_range(line_idx).unwrap(), &replacement);
             }
         }
