@@ -1,7 +1,5 @@
 use crate::{document::DocumentPage, overlay::Overlay};
-use egui::{
-    CentralPanel, Color32, ColorImage, Context, Frame, Id, Modal, Pos2, Rect, Ui, Vec2, Visuals,
-};
+use egui::{CentralPanel, Color32, ColorImage, Context, Pos2, Rect, Ui, Vec2, Visuals};
 
 pub struct App {
     areas: Vec<Overlay>,
