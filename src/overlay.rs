@@ -73,8 +73,6 @@ impl Widget for &mut Overlay {
             }
         }
 
-        ui.ctx().request_repaint();
-
         resp
     }
 }
