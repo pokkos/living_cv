@@ -45,7 +45,7 @@ impl App {
             final_rect.set_width(block.width);
             final_rect.set_height(block.height);
 
-            let new_area = Overlay::new(final_rect, block.label.clone());
+            let new_area = Overlay::new(final_rect, block.label.clone(), self.canvas_size);
             self.areas.push(new_area);
         }
 

@@ -1,17 +1,19 @@
-use egui::{Color32, Rect, Response, Sense, Shape, Ui, Widget};
+use egui::{Color32, Rect, Response, Sense, Shape, Ui, Vec2, Widget};
 
 pub struct Overlay {
     hover_rect: Rect,
     is_popup_visible: bool,
     label: String,
+    panel_size: Vec2,
 }
 
 impl Overlay {
-    pub fn new(rect: Rect, label: String) -> Self {
+    pub fn new(rect: Rect, label: String, panel_size: Vec2) -> Self {
         Self {
             hover_rect: rect,
             is_popup_visible: false,
             label,
+            panel_size,
         }
     }
 
