@@ -6,8 +6,7 @@ pub struct Overlay {
     hover_rect: Rect,
     is_popup_visible: bool,
     label: String,
-    panel_size: Vec2,
-    popup: Popup,
+    popup: Option<Popup>,
 }
 
 impl Overlay {
@@ -18,17 +17,18 @@ impl Overlay {
             hover_rect: rect,
             is_popup_visible: false,
             label,
-            panel_size,
             popup,
         }
     }
 
     pub fn has_popup(&self) -> bool {
-        !&self.popup.data().is_empty()
+        if self.popup.is_some() { true } else { false }
     }
 
     pub fn show_popup(&mut self) {
-        self.is_popup_visible = true;
+        if self.popup.is_some() {
+            self.is_popup_visible = true;
+        };
     }
 
     pub fn hide_popup(&mut self) {
@@ -40,11 +40,7 @@ impl Overlay {
     }
 
     pub fn popup(&mut self) -> Option<&mut Popup> {
-        if self.has_popup() {
-            Some(&mut self.popup)
-        } else {
-            None
-        }
+        self.popup.as_mut()
     }
 
     pub fn label(&self) -> String {
@@ -81,6 +77,18 @@ impl Widget for &mut Overlay {
                 egui::Stroke::new(stroke_width, stroke_color),
                 egui::StrokeKind::Inside,
             ));
+        }
+
+        // open the modal window
+        if resp.clicked() {
+            self.show_popup();
+        }
+
+        if self.is_popup_visible() {
+            let modal = self.popup().unwrap().show(ui);
+            if modal.should_close() {
+                self.hide_popup();
+            }
         }
 
         resp
