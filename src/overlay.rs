@@ -1,20 +1,30 @@
 use egui::{Color32, Rect, Response, Sense, Shape, Ui, Vec2, Widget};
 
+use crate::popup::Popup;
+
 pub struct Overlay {
     hover_rect: Rect,
     is_popup_visible: bool,
     label: String,
     panel_size: Vec2,
+    popup: Popup,
 }
 
 impl Overlay {
     pub fn new(rect: Rect, label: String, panel_size: Vec2) -> Self {
+        let popup = Popup::new(&label, panel_size);
+
         Self {
             hover_rect: rect,
             is_popup_visible: false,
             label,
             panel_size,
+            popup,
         }
+    }
+
+    pub fn has_popup(&self) -> bool {
+        !&self.popup.data().is_empty()
     }
 
     pub fn show_popup(&mut self) {
@@ -27,6 +37,18 @@ impl Overlay {
 
     pub fn is_popup_visible(&self) -> bool {
         self.is_popup_visible
+    }
+
+    pub fn popup(&mut self) -> Option<&mut Popup> {
+        if self.has_popup() {
+            Some(&mut self.popup)
+        } else {
+            None
+        }
+    }
+
+    pub fn label(&self) -> String {
+        self.label.clone()
     }
 }
 
@@ -59,20 +81,6 @@ impl Widget for &mut Overlay {
                 egui::Stroke::new(stroke_width, stroke_color),
                 egui::StrokeKind::Inside,
             ));
-
-            if self.is_popup_visible() {
-                egui::Modal::new(egui::Id::new("modal"))
-                    .backdrop_color(Color32::from_hex("#aaddee55").unwrap())
-                    .show(ui.ctx(), |ui| {
-                        ui.visuals_mut().faint_bg_color = Color32::RED;
-                        egui::Frame::canvas(ui.style())
-                            .fill(Color32::from_hex("#ccdde9").unwrap())
-                            .show(ui, |ui| {
-                                // ui.allocate_space(egui::Vec2 { x: 400., y: 300. });
-                                ui.label(&self.label);
-                            });
-                    });
-            }
         }
 
         resp

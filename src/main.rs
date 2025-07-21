@@ -1,6 +1,7 @@
 mod app;
 mod document;
 mod overlay;
+mod popup;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() -> eframe::Result {

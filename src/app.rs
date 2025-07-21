@@ -131,12 +131,42 @@ impl eframe::App for App {
                     let resp = ui.add(&mut *area);
 
                     // open the modal window
-                    if resp.clicked() && !area.is_popup_visible() {
+                    if resp.clicked() {
                         area.show_popup();
                     }
 
-                    if resp.clicked_elsewhere() {
-                        area.hide_popup();
+                    if area.is_popup_visible() {
+                        if let Some(popup) = area.popup() {
+                            let modal =
+                                egui::Modal::new(egui::Id::new("modal")).show(ui.ctx(), |ui| {
+                                    for (key, value) in popup.data() {
+                                        match key.as_str() {
+                                            "image" => {
+                                                let my_str = value.as_str();
+                                                ui.add(
+                                                    egui::Image::new(format!("file://{my_str}"))
+                                                        .corner_radius(5)
+                                                        .maintain_aspect_ratio(true)
+                                                        .max_width(size.x * 0.7)
+                                                        .max_height(size.y * 0.7)
+                                                        .fit_to_fraction(Vec2::from((2.0, 2.0))),
+                                                );
+                                            }
+                                            "label" => {
+                                                ui.label(value);
+                                            }
+                                            "link" => {
+                                                ui.hyperlink_to(value, value);
+                                            }
+                                            _ => (),
+                                        }
+                                    }
+                                });
+
+                            if modal.should_close() {
+                                area.hide_popup();
+                            }
+                        }
                     }
                 }
             });
