@@ -22,13 +22,13 @@ impl Overlay {
     }
 
     pub fn has_popup(&self) -> bool {
-        if self.popup.is_some() { true } else { false }
+        self.popup.is_some()
     }
 
     pub fn show_popup(&mut self) {
         if self.popup.is_some() {
             self.is_popup_visible = true;
-        };
+        }
     }
 
     pub fn hide_popup(&mut self) {
