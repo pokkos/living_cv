@@ -53,30 +53,19 @@ impl Popup {
             for (key, value) in &self.data {
                 match key.as_str() {
                     "image" => {
-                        let my_str = value.as_str();
-
-                        #[cfg(not(target_arch = "wasm32"))]
+                        let current_image = self
+                            .images
+                            .get(value)
+                            .expect("Image should be in path {value:?}")
+                            .clone();
                         ui.add(
-                            egui::Image::new(format!("file://{my_str}"))
+                            egui::Image::new(current_image)
                                 .corner_radius(5)
                                 .maintain_aspect_ratio(true)
                                 .max_width(&self.panel_size.x * 0.7)
                                 .max_height(&self.panel_size.y * 0.7)
                                 .fit_to_fraction(Vec2::from((2.0, 2.0))),
                         );
-
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            let current_image = self.images.get(value).unwrap().clone();
-                            ui.add(
-                                egui::Image::new(current_image)
-                                    .corner_radius(5)
-                                    .maintain_aspect_ratio(true)
-                                    .max_width(&self.panel_size.x * 0.7)
-                                    .max_height(&self.panel_size.y * 0.7)
-                                    .fit_to_fraction(Vec2::from((2.0, 2.0))),
-                            );
-                        }
                     }
                     "label" => {
                         ui.label(value);
