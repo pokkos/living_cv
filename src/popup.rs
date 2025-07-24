@@ -49,33 +49,62 @@ impl Popup {
 
 impl Popup {
     pub fn show(&mut self, ui: &mut egui::Ui) -> egui::ModalResponse<()> {
-        egui::Modal::new(egui::Id::new("modal")).show(ui.ctx(), |ui| {
-            for (key, value) in &self.data {
-                match key.as_str() {
-                    "image" => {
-                        let current_image = self
-                            .images
-                            .get(value)
-                            .expect("Image should be in path {value:?}")
-                            .clone();
-                        ui.add(
-                            egui::Image::new(current_image)
-                                .corner_radius(5)
-                                .maintain_aspect_ratio(true)
-                                .max_width(&self.panel_size.x * 0.7)
-                                .max_height(&self.panel_size.y * 0.7)
-                                .fit_to_fraction(Vec2::from((2.0, 2.0))),
-                        );
+        let framestyle = egui::containers::Frame {
+            inner_margin: egui::epaint::Margin {
+                left: 2,
+                right: 2,
+                top: 2,
+                bottom: 2,
+            },
+            outer_margin: egui::epaint::Margin {
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: 0,
+            },
+            corner_radius: egui::CornerRadius {
+                nw: 8,
+                ne: 8,
+                sw: 8,
+                se: 8,
+            },
+            shadow: eframe::epaint::Shadow {
+                color: egui::Color32::from_hex("#000000aa").unwrap(),
+                offset: [10, 10],
+                blur: 20,
+                spread: 10,
+            },
+            fill: egui::Color32::from_hex("#ffffff").unwrap(),
+            stroke: egui::Stroke::new(2.0, egui::Color32::from_hex("#266590").unwrap()),
+        };
+        egui::Modal::new(egui::Id::new("modal"))
+            .frame(framestyle)
+            .show(ui.ctx(), |ui| {
+                for (key, value) in &self.data {
+                    match key.as_str() {
+                        "image" => {
+                            if let Some(img) = self.images.get(value) {
+                                ui.add(
+                                    egui::Image::new(img.clone())
+                                        .corner_radius(5)
+                                        .maintain_aspect_ratio(true)
+                                        .max_width(&self.panel_size.x * 0.7)
+                                        .max_height(&self.panel_size.y * 0.7)
+                                        .fit_to_fraction(Vec2::from((2.0, 2.0))),
+                                );
+                            };
+                        }
+                        "label" => {
+                            ui.label(value);
+                        }
+                        "link" => {
+                            ui.add(
+                                Hyperlink::from_label_and_url(value, value).open_in_new_tab(true),
+                            );
+                        }
+                        _ => (),
                     }
-                    "label" => {
-                        ui.label(value);
-                    }
-                    "link" => {
-                        ui.add(Hyperlink::from_label_and_url(value, value).open_in_new_tab(true));
-                    }
-                    _ => (),
                 }
-            }
-        })
+            })
     }
 }
